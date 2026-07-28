@@ -1,7 +1,11 @@
 {% extends "base.html" %}
 {% block title %}Leads | Rabe Leads{% endblock %}
 {% block content %}
-<div class="heading-row"><h1>Leads</h1><a class="button secondary" href="/leads/export.csv">Exportar CSV</a></div>
+<div class="heading-row">
+  <h1>Leads</h1>
+  <a class="button secondary" href="/leads/export.csv">Exportar CSV</a>
+</div>
+
 <form class="filters">
   <input name="q" value="{{ q }}" placeholder="Empresa, cidade ou categoria">
   <input name="state" value="{{ state }}" maxlength="2" placeholder="UF">
@@ -14,21 +18,73 @@
   <input name="min_score" type="number" min="0" max="100" value="{{ min_score }}" placeholder="Score mínimo">
   <button>Filtrar</button>
 </form>
-<div class="panel table-wrap">
-<table>
-  <thead><tr><th>Empresa</th><th>Local</th><th>Site</th><th>Contato</th><th>Score</th><th>Status</th></tr></thead>
-  <tbody>
-  {% for lead in leads %}
-    <tr>
-      <td><a href="/leads/{{ lead.id }}"><strong>{{ lead.company_name }}</strong></a><small>{{ lead.category or "" }}</small></td>
-      <td>{{ lead.city or "-" }}/{{ lead.state or "-" }}</td>
-      <td>{% if lead.website %}<a href="{{ lead.website }}" target="_blank">Abrir</a>{% else %}<span class="danger">Sem site</span>{% endif %}</td>
-      <td>{{ lead.email or lead.whatsapp or lead.phone or "-" }}</td>
-      <td><span class="score">{{ lead.score }}</span></td>
-      <td>{{ lead.status }}</td>
-    </tr>
-  {% endfor %}
-  </tbody>
-</table>
-</div>
+
+<form method="post" action="/leads/email/review">
+  <div class="selection-bar">
+    <label><input id="select-all" type="checkbox"> Selecionar todos da página</label>
+    <span id="selected-count">0 selecionadas</span>
+    <button type="submit">Preparar envio por e-mail</button>
+  </div>
+
+  <div class="panel table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th></th>
+          <th>Empresa</th>
+          <th>Local</th>
+          <th>Site</th>
+          <th>E-mail</th>
+          <th>Score</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for lead in leads %}
+        <tr>
+          <td>
+            <input
+              class="lead-checkbox"
+              type="checkbox"
+              name="lead_ids"
+              value="{{ lead.id }}"
+              {% if not lead.email or lead.do_not_contact %}disabled{% endif %}
+            >
+          </td>
+          <td>
+            <a href="/leads/{{ lead.id }}"><strong>{{ lead.company_name }}</strong></a>
+            <small>{{ lead.category or "" }}</small>
+            {% if lead.do_not_contact %}<small class="danger">Não contatar</small>{% endif %}
+          </td>
+          <td>{{ lead.city or "-" }}/{{ lead.state or "-" }}</td>
+          <td>{% if lead.website %}<a href="{{ lead.website }}" target="_blank">Abrir</a>{% else %}<span class="danger">Sem site</span>{% endif %}</td>
+          <td>{{ lead.email or "Sem e-mail" }}</td>
+          <td><span class="score">{{ lead.score }}</span></td>
+          <td>{{ lead.status }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</form>
+
+<script>
+const selectAll = document.getElementById('select-all');
+const checkboxes = [...document.querySelectorAll('.lead-checkbox:not(:disabled)')];
+const count = document.getElementById('selected-count');
+
+function updateCount() {
+  const selected = checkboxes.filter(item => item.checked).length;
+  count.textContent = `${selected} selecionada${selected === 1 ? '' : 's'}`;
+  selectAll.checked = selected > 0 && selected === checkboxes.length;
+  selectAll.indeterminate = selected > 0 && selected < checkboxes.length;
+}
+
+selectAll.addEventListener('change', () => {
+  checkboxes.forEach(item => item.checked = selectAll.checked);
+  updateCount();
+});
+checkboxes.forEach(item => item.addEventListener('change', updateCount));
+updateCount();
+</script>
 {% endblock %}
