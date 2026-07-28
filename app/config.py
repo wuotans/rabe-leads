@@ -1,7 +1,9 @@
 from functools import lru_cache
-from pydantic import BaseModel
-from dotenv import load_dotenv
 import os
+
+from dotenv import load_dotenv
+from pydantic import BaseModel
+from sqlalchemy.engine import URL
 
 load_dotenv()
 
@@ -33,11 +35,15 @@ class Settings(BaseModel):
     user_agent: str = os.getenv("USER_AGENT", "RabeLeads/1.0")
 
     @property
-    def database_url(self) -> str:
-        return (
-            f"mysql+pymysql://{self.mysql_user}:{self.mysql_password}"
-            f"@{self.mysql_host}:{self.mysql_port}/{self.mysql_database}"
-            "?charset=utf8mb4"
+    def database_url(self) -> URL:
+        return URL.create(
+            drivername="mysql+pymysql",
+            username=self.mysql_user,
+            password=self.mysql_password,
+            host=self.mysql_host,
+            port=self.mysql_port,
+            database=self.mysql_database,
+            query={"charset": "utf8mb4"},
         )
 
 
