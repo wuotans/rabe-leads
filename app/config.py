@@ -5,6 +5,7 @@ import os
 
 load_dotenv()
 
+
 class Settings(BaseModel):
     app_name: str = os.getenv("APP_NAME", "Rabe Leads")
     app_env: str = os.getenv("APP_ENV", "development")
@@ -19,6 +20,15 @@ class Settings(BaseModel):
     google_places_api_key: str = os.getenv("GOOGLE_PLACES_API_KEY", "")
     google_pagespeed_api_key: str = os.getenv("GOOGLE_PAGESPEED_API_KEY", "")
 
+    smtp_host: str = os.getenv("SMTP_HOST", "")
+    smtp_port: int = int(os.getenv("SMTP_PORT", "587"))
+    smtp_user: str = os.getenv("SMTP_USER", "")
+    smtp_password: str = os.getenv("SMTP_PASSWORD", "")
+    smtp_from_email: str = os.getenv("SMTP_FROM_EMAIL", "")
+    smtp_from_name: str = os.getenv("SMTP_FROM_NAME", "Rabe Soluções Digitais")
+    smtp_use_tls: bool = os.getenv("SMTP_USE_TLS", "true").lower() == "true"
+    smtp_use_ssl: bool = os.getenv("SMTP_USE_SSL", "false").lower() == "true"
+
     request_timeout: int = int(os.getenv("REQUEST_TIMEOUT", "20"))
     user_agent: str = os.getenv("USER_AGENT", "RabeLeads/1.0")
 
@@ -29,6 +39,7 @@ class Settings(BaseModel):
             f"@{self.mysql_host}:{self.mysql_port}/{self.mysql_database}"
             "?charset=utf8mb4"
         )
+
 
 @lru_cache
 def get_settings() -> Settings:
