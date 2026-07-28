@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{% block title %}Rabe Leads{% endblock %}</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <aside class="sidebar">
+    <a class="brand" href="/">RABE <span>LEADS</span></a>
+    <nav>
+      <a href="/">Dashboard</a>
+      <a href="/search">Buscar empresas</a>
+      <a href="/leads">Leads</a>
+      <a href="/leads/export.csv">Exportar CSV</a>
+    </nav>
+  </aside>
+  <main class="content">
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>
