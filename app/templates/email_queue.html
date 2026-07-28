@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}Enviar propostas | Rabe Leads{% endblock %}
+{% block content %}
+<div class="heading-row">
+  <div>
+    <h1>Envio de propostas</h1>
+    <p class="muted">Os e-mails são enviados um de cada vez, sempre após revisão manual.</p>
+  </div>
+  <a class="button secondary" href="/leads">Voltar para os leads</a>
+</div>
+
+{% if message %}<div class="alert">{{ message }}</div>{% endif %}
+{% if error %}<div class="alert danger-bg">{{ error }}</div>{% endif %}
+
+{% if skipped %}
+<section class="panel">
+  <h2>Empresas ignoradas</h2>
+  <p class="muted">Foram ignoradas por não possuírem e-mail ou estarem marcadas como “não contatar”.</p>
+  <ul>
+    {% for lead in skipped %}
+      <li>{{ lead.company_name }} — {{ lead.email or "sem e-mail" }}</li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+{% if leads %}
+  {% set current = leads[0] %}
+  <section class="panel">
+    <div class="heading-row">
+      <div>
+        <h2>{{ current.company_name }}</h2>
+        <p class="muted">
+          {{ current.email }} · {{ current.city or "-" }}/{{ current.state or "-" }} · Score {{ current.score }}
+        </p>
+      </div>
+      <strong>{{ leads|length }} restante{{ '' if leads|length == 1 else 's' }}</strong>
+    </div>
+
+    <form method="post" action="/leads/{{ current.id }}/send-email" class="email-form">
+      <label>Destinatário
+        <input value="{{ current.email }}" readonly>
+      </label>
+
+      <label>Assunto
+        <input name="subject" value="Uma ideia para fortalecer a presença digital da {{ current.company_name }}" required>
+      </label>
+
+      <label>Mensagem
+        <textarea name="body" class="message" required>Olá! Tudo bem?
+
+Meu nome é Matheus e faço parte da Rabe Soluções Digitais.
+
+Conheci a {{ current.company_name }}{% if current.city %}, de {{ current.city }}{% endif %}, durante uma pesquisa de empresas e gostaria de apresentar nosso trabalho com sites institucionais, sistemas web e soluções digitais personalizadas.
+
+{% if current.has_website %}Ao analisar a presença digital da empresa, identificamos oportunidades de modernização e melhoria no site atual.{% else %}Não identificamos um site institucional da empresa e acreditamos que essa pode ser uma boa oportunidade para fortalecer a presença digital da marca.{% endif %}
+
+Estou enviando em anexo uma apresentação com alguns projetos já desenvolvidos e nossas modalidades de contratação.
+
+Caso faça sentido para a empresa, ficarei à disposição para conversar e entender melhor as necessidades do negócio.
+
+Caso este contato não seja de interesse, basta responder informando e não enviaremos novas mensagens.
+
+Atenciosamente,
+Matheus Patryck
+Rabe Soluções Digitais
+(65) 99245-5040
+https://agenciarabe.com.br</textarea>
+      </label>
+
+      <label>Caminho local do PDF da proposta
+        <input
+          name="attachment_path"
+          placeholder="/home/matheus/Documentos/Proposta_Comercial_Rabe.pdf"
+          required
+        >
+        <small class="muted">Informe o caminho completo do arquivo PDF salvo na sua máquina.</small>
+      </label>
+
+      <input
+        type="hidden"
+        name="remaining_ids"
+        value="{% for lead in leads[1:] %}{{ lead.id }}{% if not loop.last %},{% endif %}{% endfor %}"
+      >
+
+      <div class="email-actions">
+        <a class="button secondary" href="/leads/{{ current.id }}" target="_blank">Abrir cadastro</a>
+        <button type="submit" onclick="return confirm('Confirma o envio da proposta para {{ current.email }}?')">
+          Enviar proposta para esta empresa
+        </button>
+      </div>
+    </form>
+  </section>
+
+  {% if leads|length > 1 %}
+  <section class="panel">
+    <h2>Próximas empresas</h2>
+    <table>
+      <thead><tr><th>Empresa</th><th>E-mail</th><th>Score</th></tr></thead>
+      <tbody>
+      {% for lead in leads[1:] %}
+        <tr>
+          <td>{{ lead.company_name }}</td>
+          <td>{{ lead.email }}</td>
+          <td><span class="score">{{ lead.score }}</span></td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </section>
+  {% endif %}
+{% else %}
+<section class="panel">
+  <h2>Fila concluída</h2>
+  <p>Não existem outras empresas aguardando envio nesta seleção.</p>
+  <a class="button" href="/leads">Selecionar novas empresas</a>
+</section>
+{% endif %}
+{% endblock %}
