@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Dashboard | Rabe Leads{% endblock %}
+{% block content %}
+<h1>Dashboard</h1>
+<div class="cards">
+  <div class="card"><span>Total</span><strong>{{ total }}</strong></div>
+  <div class="card"><span>Score ≥ 60</span><strong>{{ high }}</strong></div>
+  <div class="card"><span>Sem site</span><strong>{{ no_site }}</strong></div>
+  <div class="card"><span>Contatados</span><strong>{{ contacted }}</strong></div>
+</div>
+<section class="panel">
+  <h2>Leads recentes</h2>
+  <table>
+    <thead><tr><th>Empresa</th><th>Cidade</th><th>Categoria</th><th>Score</th><th>Status</th></tr></thead>
+    <tbody>
+    {% for lead in latest %}
+      <tr>
+        <td><a href="/leads/{{ lead.id }}">{{ lead.company_name }}</a></td>
+        <td>{{ lead.city or "-" }}/{{ lead.state or "-" }}</td>
+        <td>{{ lead.category or "-" }}</td>
+        <td><span class="score">{{ lead.score }}</span></td>
+        <td>{{ lead.status }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}
