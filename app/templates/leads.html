@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Leads | Rabe Leads{% endblock %}
+{% block content %}
+<div class="heading-row"><h1>Leads</h1><a class="button secondary" href="/leads/export.csv">Exportar CSV</a></div>
+<form class="filters">
+  <input name="q" value="{{ q }}" placeholder="Empresa, cidade ou categoria">
+  <input name="state" value="{{ state }}" maxlength="2" placeholder="UF">
+  <select name="status">
+    <option value="">Todos os status</option>
+    {% for value in ["novo","contatado","respondeu","reuniao","proposta","fechado","perdido"] %}
+    <option value="{{ value }}" {% if status == value %}selected{% endif %}>{{ value }}</option>
+    {% endfor %}
+  </select>
+  <input name="min_score" type="number" min="0" max="100" value="{{ min_score }}" placeholder="Score mínimo">
+  <button>Filtrar</button>
+</form>
+<div class="panel table-wrap">
+<table>
+  <thead><tr><th>Empresa</th><th>Local</th><th>Site</th><th>Contato</th><th>Score</th><th>Status</th></tr></thead>
+  <tbody>
+  {% for lead in leads %}
+    <tr>
+      <td><a href="/leads/{{ lead.id }}"><strong>{{ lead.company_name }}</strong></a><small>{{ lead.category or "" }}</small></td>
+      <td>{{ lead.city or "-" }}/{{ lead.state or "-" }}</td>
+      <td>{% if lead.website %}<a href="{{ lead.website }}" target="_blank">Abrir</a>{% else %}<span class="danger">Sem site</span>{% endif %}</td>
+      <td>{{ lead.email or lead.whatsapp or lead.phone or "-" }}</td>
+      <td><span class="score">{{ lead.score }}</span></td>
+      <td>{{ lead.status }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}
