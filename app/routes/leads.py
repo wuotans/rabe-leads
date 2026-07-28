@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from app.db import get_db
 from app.models import Lead
 from app.services.templates import email_subject, email_body, whatsapp_body, whatsapp_link
+from app.services.mailer import send_proposal_email, MailerError
 
 router = APIRouter(prefix="/leads")
 
@@ -69,6 +70,86 @@ def export_csv(db: Session = Depends(get_db)):
         iter([content]),
         media_type="text/csv",
         headers={"Content-Disposition": "attachment; filename=rabe_leads.csv"},
+    )
+
+
+@router.post("/email/review", response_class=HTMLResponse)
+def review_selected_emails(
+    request: Request,
+    lead_ids: list[int] = Form(...),
+    db: Session = Depends(get_db),
+):
+    leads = db.scalars(
+        select(Lead)
+        .where(Lead.id.in_(lead_ids))
+        .order_by(Lead.score.desc(), Lead.company_name.asc())
+    ).all()
+
+    valid_leads = [lead for lead in leads if lead.email and not lead.do_not_contact]
+    skipped = [lead for lead in leads if not lead.email or lead.do_not_contact]
+
+    return request.app.state.templates.TemplateResponse(
+        "email_queue.html",
+        {
+            "request": request,
+            "leads": valid_leads,
+            "skipped": skipped,
+            "message": None,
+            "error": None,
+        },
+    )
+
+
+@router.post("/{lead_id}/send-email", response_class=HTMLResponse)
+def send_email_to_lead(
+    request: Request,
+    lead_id: int,
+    subject: str = Form(...),
+    body: str = Form(...),
+    attachment_path: str = Form(...),
+    remaining_ids: str = Form(""),
+    db: Session = Depends(get_db),
+):
+    lead = db.get(Lead, lead_id)
+    if not lead:
+        raise HTTPException(404, "Lead não encontrado")
+    if lead.do_not_contact:
+        raise HTTPException(400, "Este lead está marcado como não contatar")
+    if not lead.email:
+        raise HTTPException(400, "Este lead não possui e-mail")
+
+    error = None
+    message = None
+    try:
+        send_proposal_email(
+            recipient=lead.email,
+            subject=subject.strip(),
+            body=body.strip(),
+            attachment_path=attachment_path.strip(),
+        )
+        lead.status = "contatado"
+        lead.last_contact_at = datetime.utcnow()
+        db.commit()
+        message = f"Proposta enviada com sucesso para {lead.company_name} ({lead.email})."
+    except MailerError as exc:
+        error = str(exc)
+
+    ids = [int(item) for item in remaining_ids.split(",") if item.strip().isdigit()]
+    leads = db.scalars(
+        select(Lead)
+        .where(Lead.id.in_(ids))
+        .order_by(Lead.score.desc(), Lead.company_name.asc())
+    ).all() if ids else []
+
+    return request.app.state.templates.TemplateResponse(
+        "email_queue.html",
+        {
+            "request": request,
+            "leads": leads,
+            "skipped": [],
+            "message": message,
+            "error": error,
+        },
     )
 
 
