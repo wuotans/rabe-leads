@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Buscar empresas | Rabe Leads{% endblock %}
+{% block content %}
+<h1>Buscar empresas</h1>
+<p class="muted">Use a API oficial Google Places. Cada busca retorna até 20 resultados nesta tela.</p>
+{% if message %}<div class="alert">{{ message }}</div>{% endif %}
+<form method="post" class="panel form-grid">
+  <label>Categoria
+    <input name="category" placeholder="empresa, consultoria, restaurante..." required>
+  </label>
+  <label>Cidade
+    <input name="city" placeholder="Cuiabá" required>
+  </label>
+  <label>UF
+    <input name="state" maxlength="2" placeholder="MT" required>
+  </label>
+  <button type="submit">Pesquisar e salvar</button>
+</form>
+<div class="panel">
+  <h2>Buscas sugeridas</h2>
+  <p>empresa, consultoria, engenharia, restaurante, escola, hospital, transportadora, mercado, loja, academia, hotel.</p>
+</div>
+{% endblock %}
