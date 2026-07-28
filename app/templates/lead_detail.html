@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}{{ lead.company_name }} | Rabe Leads{% endblock %}
+{% block content %}
+<div class="heading-row">
+  <div><h1>{{ lead.company_name }}</h1><p class="muted">{{ lead.category or "-" }} · {{ lead.city or "-" }}/{{ lead.state or "-" }}</p></div>
+  <span class="big-score">{{ lead.score }}</span>
+</div>
+<div class="detail-grid">
+<section class="panel">
+  <h2>Dados</h2>
+  <dl>
+    <dt>Site</dt><dd>{% if lead.website %}<a target="_blank" href="{{ lead.website }}">{{ lead.website }}</a>{% else %}Não encontrado{% endif %}</dd>
+    <dt>E-mail</dt><dd>{{ lead.email or "-" }}</dd>
+    <dt>WhatsApp</dt><dd>{{ lead.whatsapp or "-" }}</dd>
+    <dt>Instagram</dt><dd>{{ lead.instagram or "-" }}</dd>
+    <dt>Motivo do score</dt><dd>{{ lead.score_reason or "-" }}</dd>
+  </dl>
+</section>
+<section class="panel">
+  <h2>Análise</h2>
+  <ul class="checks">
+    <li>Site: {{ "Sim" if lead.has_website else "Não" }}</li>
+    <li>SSL: {{ "Sim" if lead.has_ssl else "Não" }}</li>
+    <li>Responsivo: {{ "Sim" if lead.is_responsive else "Não" }}</li>
+    <li>Aparência antiga: {{ "Sim" if lead.looks_outdated else "Não" }}</li>
+    <li>PageSpeed: {{ lead.pagespeed_performance if lead.pagespeed_performance is not none else "-" }}</li>
+    <li>SEO: {{ lead.pagespeed_seo if lead.pagespeed_seo is not none else "-" }}</li>
+  </ul>
+</section>
+</div>
+<section class="panel">
+  <h2>CRM</h2>
+  <form method="post" action="/leads/{{ lead.id }}/update" class="form-grid">
+    <label>Status
+      <select name="status">
+      {% for value in ["novo","contatado","respondeu","reuniao","proposta","fechado","perdido"] %}
+        <option value="{{ value }}" {% if lead.status == value %}selected{% endif %}>{{ value }}</option>
+      {% endfor %}
+      </select>
+    </label>
+    <label>E-mail<input name="email" value="{{ lead.email or '' }}"></label>
+    <label>WhatsApp<input name="whatsapp" value="{{ lead.whatsapp or '' }}"></label>
+    <label>Próximo contato<input type="datetime-local" name="next_followup_at"></label>
+    <label class="full">Observações<textarea name="notes">{{ lead.notes or "" }}</textarea></label>
+    <label class="check"><input type="checkbox" name="do_not_contact" {% if lead.do_not_contact %}checked{% endif %}> Não contatar</label>
+    <button>Salvar</button>
+  </form>
+</section>
+<section class="panel">
+  <h2>Primeiro contato</h2>
+  {% if lead.do_not_contact %}<div class="alert danger-bg">Este lead está marcado como “não contatar”.</div>{% endif %}
+  <h3>Assunto do e-mail</h3>
+  <textarea readonly>{{ email_subject }}</textarea>
+  <h3>Mensagem de e-mail</h3>
+  <textarea class="message" readonly>{{ email_body }}</textarea>
+  <h3>WhatsApp</h3>
+  <textarea class="message" readonly>{{ whatsapp_body }}</textarea>
+  {% if whatsapp_link and not lead.do_not_contact %}
+  <a class="button" target="_blank" href="{{ whatsapp_link }}">Abrir conversa no WhatsApp</a>
+  {% endif %}
+</section>
+{% endblock %}
